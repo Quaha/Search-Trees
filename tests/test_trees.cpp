@@ -222,5 +222,119 @@ TYPED_TEST(SearchTreeTest, CanChangeALotOfElements) {
     }
 }
 
+TYPED_TEST(SearchTreeTest, RangeBasedIterators) {
+
+    const size_t cnt = 1000;
+
+    std::vector<int> keys;
+    std::set<int> was;
+
+    while (keys.size() < cnt) {
+        int key = std::rand();
+
+        if (!was.contains(key)) {
+            was.insert(key);
+            keys.push_back(key);
+        }
+    }
+
+    for (int key : keys) {
+        this->tree.insert(key, key);
+    }
+    
+    std::sort(keys.begin(), keys.end());
+
+    int p = 0;
+    for (auto [key, value] : this->tree) {
+        EXPECT_EQ(key, keys[p]);
+        EXPECT_EQ(value, keys[p++]);
+    }
+}
+
+TYPED_TEST(SearchTreeTest, DereferencingEndPointer) {
+    EXPECT_ANY_THROW(*this->tree.end());
+}
+
+TYPED_TEST(SearchTreeTest, LowerBound) {
+    this->tree.insert(1, 10);
+    this->tree.insert(3, 30);
+    this->tree.insert(5, 50);
+
+    auto it = this->tree.lowerBound(3);
+    EXPECT_EQ(it->first, 3);
+    EXPECT_EQ(it->second, 30);
+
+    it = this->tree.lowerBound(2);
+    EXPECT_EQ(it->first, 3);
+    EXPECT_EQ(it->second, 30);
+
+    it = this->tree.lowerBound(6);
+    EXPECT_EQ(it, this->tree.end());
+}
+
+TYPED_TEST(SearchTreeTest, UpperBound) {
+    this->tree.insert(1, 10);
+    this->tree.insert(3, 30);
+    this->tree.insert(5, 50);
+
+    auto it = this->tree.upperBound(3);
+    EXPECT_EQ(it->first, 5);
+    EXPECT_EQ(it->second, 50);
+
+    it = this->tree.upperBound(2);
+    EXPECT_EQ(it->first, 3);
+    EXPECT_EQ(it->second, 30);
+
+    it = this->tree.upperBound(5);
+    EXPECT_EQ(it, this->tree.end());
+}
+
+TYPED_TEST(SearchTreeTest, LowerAndUpperBoundOnLargeTree) {
+    const size_t cnt = 1000;
+    std::vector<int> keys;
+    std::set<int> was;
+
+    while (keys.size() < cnt) {
+        int key = std::rand();
+        if (!was.contains(key)) {
+            was.insert(key);
+            keys.push_back(key);
+        }
+    }
+
+    for (int key : keys) {
+        this->tree.insert(key, key);
+    }
+
+    std::sort(keys.begin(), keys.end());
+
+    for (size_t i = 0; i < cnt; ++i) {
+        int key = keys[i];
+
+        auto it_lower = this->tree.lowerBound(key);
+        auto it_upper = this->tree.upperBound(key);
+
+        if (i == cnt - 1) {
+            EXPECT_EQ(it_lower->first, key);
+            EXPECT_EQ(it_upper, this->tree.end());
+        }
+        else {
+            EXPECT_EQ(it_lower->first, key);
+            EXPECT_EQ(it_upper->first, keys[i + 1]);
+        }
+    }
+}
+
+TYPED_TEST(SearchTreeTest, LowerAndUpperBoundOnEmptyTree) {
+    auto it = this->tree.lowerBound(10);
+    EXPECT_EQ(it, this->tree.end());
+
+    it = this->tree.upperBound(10);
+    EXPECT_EQ(it, this->tree.end());
+}
+
+
+
+
 
 

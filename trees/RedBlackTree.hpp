@@ -53,21 +53,16 @@ public:
         }
 
         std::pair<TKey, TValue>* operator->() const {
-            return &container[tree_position].data;
+            return &container->tree[tree_position].data;
         }
 
-        Iterator& operator++() {
+        Iterator operator++() {
+            const TKey& key = container->tree[tree_position].data.first;
+            auto result_it = container->upperBound(key);
 
-            // code
+            this->tree_position = result_it.tree_position;
 
-            return *this;
-        }
-
-        Iterator& operator--() {
-
-            // code
-
-            return *this;
+            return result_it;
         }
 
         bool operator==(const Iterator& other) const {
@@ -337,6 +332,32 @@ private:
         return getCountOfCorrectNode(getLeftSon(x)) + getCountOfCorrectNode(getRightSon(x)) + (!tree[x].is_fictitious);
     }
 
+    void lowerBound(const TKey& key, int x, int &best_pos) {
+        if (tree[x].is_fictitious) {
+            return;
+        }
+        if (tree[x].data.first >= key) {
+            best_pos = x;
+            lowerBound(key, getLeftSon(x), best_pos);
+        }
+        else{
+            lowerBound(key, getRightSon(x), best_pos);
+        }
+    }
+
+    void upperBound(const TKey& key, int x, int &best_pos) {
+        if (tree[x].is_fictitious) {
+            return;
+        }
+        if (tree[x].data.first > key) {
+            best_pos = x;
+            upperBound(key, getLeftSon(x), best_pos);
+        }
+        else {
+            upperBound(key, getRightSon(x), best_pos);
+        }
+    }
+
 public:
     bool isCorrectTree() {
         bool is_correct_bh = true;
@@ -357,14 +378,26 @@ public:
 
     Iterator begin() const {
         int lowest_pos = root;
-        while (tree[root].left_node != -1) {
-            lowest_pos = tree[root].left_node;
+        while (!tree[getLeftSon(lowest_pos)].is_fictitious) {
+            lowest_pos = getLeftSon(lowest_pos);
         }
         return makeIterator(lowest_pos);
     }
 
     Iterator end() const {
         return makeIterator(-1);
+    }
+
+    Iterator lowerBound(const TKey& key) {
+        int best_pos = -1;
+        lowerBound(key, root, best_pos);
+        return makeIterator(best_pos);
+    }
+
+    Iterator upperBound(const TKey& key) {
+        int best_pos = -1;
+        upperBound(key, root, best_pos);
+        return makeIterator(best_pos);
     }
 
     Iterator insert(const TKey& key, const TValue& value) {
