@@ -5,7 +5,6 @@
 #include <set>
 #include <algorithm>
 
-#include "AVLTree.hpp"
 #include "RedBlackTree.hpp"
 
 template <typename TreeType>
@@ -14,7 +13,7 @@ protected:
     TreeType tree;
 };
 
-const int BIG_TESTS_SIZE = 3000; // 3000
+const int BIG_TESTS_SIZE = 3000;
 
 using TreeImplementations = ::testing::Types<RedBlackTree<int, int>>;
 TYPED_TEST_SUITE(SearchTreeTest, TreeImplementations);
@@ -25,51 +24,51 @@ TYPED_TEST(SearchTreeTest, IsEmptyContainerAfterInitializing) {
 
 TYPED_TEST(SearchTreeTest, CanInsertOneElement) {
     EXPECT_NO_THROW(this->tree.insert(0, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 }
 
 TYPED_TEST(SearchTreeTest, CanInsertSomeElements1) {
     EXPECT_NO_THROW(this->tree.insert(0, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 
     EXPECT_NO_THROW(this->tree.insert(1, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 
     EXPECT_NO_THROW(this->tree.insert(2, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 }
 
 TYPED_TEST(SearchTreeTest, CanInsertSomeElements2) {
     EXPECT_NO_THROW(this->tree.insert(2, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 
     EXPECT_NO_THROW(this->tree.insert(1, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 
     EXPECT_NO_THROW(this->tree.insert(0, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 }
 
 TYPED_TEST(SearchTreeTest, CanInsertSomeElements3) {
     EXPECT_NO_THROW(this->tree.insert(1, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 
     EXPECT_NO_THROW(this->tree.insert(2, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 
     EXPECT_NO_THROW(this->tree.insert(0, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 }
 
 TYPED_TEST(SearchTreeTest, CanInsertSomeElements4) {
     EXPECT_NO_THROW(this->tree.insert(1, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 
     EXPECT_NO_THROW(this->tree.insert(0, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 
     EXPECT_NO_THROW(this->tree.insert(2, 0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 }
 
 TYPED_TEST(SearchTreeTest, CanInsertALotOfElements) {
@@ -90,12 +89,21 @@ TYPED_TEST(SearchTreeTest, CanInsertALotOfElements) {
 
     for (int key: keys) {
         EXPECT_NO_THROW(this->tree.insert(key, 0));
-        EXPECT_TRUE(this->tree.isCorrectTree());
+        EXPECT_TRUE(this->tree.isTreeCorrect());
     }
 }
 
 TYPED_TEST(SearchTreeTest, CantFindWrongElement) {
     EXPECT_EQ(this->tree.find(0), this->tree.end());
+}
+
+TYPED_TEST(SearchTreeTest, DoesntExistWrongElemnt) {
+    EXPECT_FALSE(this->tree.isExist(0));
+}
+
+TYPED_TEST(SearchTreeTest, ExistsCorrectElemnt) {
+    this->tree.insert(0, 0);
+    EXPECT_TRUE(this->tree.isExist(0));
 }
 
 TYPED_TEST(SearchTreeTest, CanFindOneElement) {
@@ -348,7 +356,7 @@ TYPED_TEST(SearchTreeTest, CanEraseOneElement) {
     this->tree.insert(0, 0);
 
     EXPECT_NO_THROW(this->tree.erase(0));
-    EXPECT_TRUE(this->tree.isCorrectTree());
+    EXPECT_TRUE(this->tree.isTreeCorrect());
 }
 
 TYPED_TEST(SearchTreeTest, SpecialDegubTest) {
@@ -362,7 +370,7 @@ TYPED_TEST(SearchTreeTest, SpecialDegubTest) {
 
     for (int key : erase_order) {
         EXPECT_NO_THROW(this->tree.erase(key));
-        ASSERT_TRUE(this->tree.isCorrectTree());
+        ASSERT_TRUE(this->tree.isTreeCorrect());
     }
 }
 
@@ -374,22 +382,22 @@ TYPED_TEST(SearchTreeTest, CanEraseSomeElements) {
     
     */
 
-    std::vector<int> insert_order = { 1, 2, 3, 4, 5};
+    std::vector<int> insert_order = { 1, 2, 3, 4, 5, 6};
     
     do {
-        std::vector<int> erase_order = { 1, 2, 3, 4, 5};
+        std::vector<int> erase_order = { 1, 2, 3, 4, 5, 6};
         do {
 
             for (int key : insert_order) {
                 this->tree.insert(key, 0);
-                EXPECT_TRUE(this->tree.isCorrectTree());
+                EXPECT_TRUE(this->tree.isTreeCorrect());
             }
 
             for (int key : erase_order) {
                 EXPECT_NO_THROW(this->tree.erase(key));
-                EXPECT_TRUE(this->tree.isCorrectTree());
+                EXPECT_TRUE(this->tree.isTreeCorrect());
 
-                if (!this->tree.isCorrectTree()) {
+                if (!this->tree.isTreeCorrect()) {
                     int b = 5;
                     b += 5;
                     b++;
@@ -427,7 +435,7 @@ TYPED_TEST(SearchTreeTest, CanEraseSomeElements) {
 //
 //    for (int key : keys) {
 //        EXPECT_NO_THROW(this->tree.erase(key));
-//        EXPECT_TRUE(this->tree.isCorrectTree());
+//        EXPECT_TRUE(this->tree.isTreeCorrect());
 //    }
 //}
 
