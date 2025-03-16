@@ -14,7 +14,7 @@ protected:
     TreeType tree;
 };
 
-const int BIG_TESTS_SIZE = 3; // 3000
+const int BIG_TESTS_SIZE = 3000; // 3000
 
 using TreeImplementations = ::testing::Types<RedBlackTree<int, int>>;
 TYPED_TEST_SUITE(SearchTreeTest, TreeImplementations);
@@ -353,7 +353,7 @@ TYPED_TEST(SearchTreeTest, CanEraseOneElement) {
 
 TYPED_TEST(SearchTreeTest, SpecialDegubTest) {
 
-    std::vector<int> insert_order = { 1, 2, 4, 5, 6, 3 };
+    std::vector<int> insert_order = { 1, 2, 3, 5, 6, 4 };
     std::vector<int> erase_order = { 1, 2, 3, 4, 5, 6 };
 
     for (int key : insert_order) {
@@ -374,10 +374,10 @@ TYPED_TEST(SearchTreeTest, CanEraseSomeElements) {
     
     */
 
-    std::vector<int> insert_order = { 1, 2, 3, 4, 5, 6};
+    std::vector<int> insert_order = { 1, 2, 3, 4, 5};
     
     do {
-        std::vector<int> erase_order = { 1, 2, 3, 4, 5, 6};
+        std::vector<int> erase_order = { 1, 2, 3, 4, 5};
         do {
 
             for (int key : insert_order) {

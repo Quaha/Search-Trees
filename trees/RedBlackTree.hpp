@@ -384,20 +384,20 @@ protected:
                        C
                     */
 
-                    int D = -1;
                     if (getLeftSon(C) != -1 && getColor(getLeftSon(C)) == Color::Red) {
-                        D = getLeftSon(C);
-                    }
-                    else if (getRightSon(C) != -1 && getColor(getRightSon(C)) == Color::Red) {
-                        D = getRightSon(C);
-                    }
+                        int D = getLeftSon(C);
 
-                    if (D != -1) {
                         tree[D].color = Color::Black;
 
                         smallLeftRotation(B);
                         smallRightRotation(A);
+                    }
+                    else if (getRightSon(C) != -1 && getColor(getRightSon(C)) == Color::Red) {
+                        int D = getRightSon(C);
 
+                        smallLeftRotation(B);
+                        smallRightRotation(A);
+                        smallRightRotation(B);
                     }
                     else {
                         tree[C].color = Color::Red;
@@ -405,7 +405,6 @@ protected:
 
                         smallRightRotation(A);
                     }
-
                 }
                 else {
                     int C = getLeftSon(B);
@@ -418,20 +417,20 @@ protected:
                         C
                     */
 
-                    int D = -1;
-                    if (getLeftSon(C) != -1 && getColor(getLeftSon(C)) == Color::Red) {
-                        D = getLeftSon(C);
-                    }
-                    else if (getRightSon(C) != -1 && getColor(getRightSon(C)) == Color::Red) {
-                        D = getRightSon(C);
-                    }
+                    if (getRightSon(C) != -1 && getColor(getRightSon(C)) == Color::Red) {
+                        int D = getRightSon(C);
 
-                    if (D != -1) {
                         tree[D].color = Color::Black;
 
                         smallRightRotation(B);
                         smallLeftRotation(A);
+                    }
+                    else if (getLeftSon(C) != -1 && getColor(getLeftSon(C)) == Color::Red) {
+                        int D = getLeftSon(C);
 
+                        smallRightRotation(B);
+                        smallLeftRotation(A);
+                        smallLeftRotation(B);
                     }
                     else {
                         tree[C].color = Color::Red;
