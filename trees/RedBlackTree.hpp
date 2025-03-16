@@ -19,7 +19,7 @@ protected:
 
         std::pair<TKey, TValue> data;
 
-        bool is_fictitious;
+        bool is_fict;
     };
 
 public:
@@ -102,14 +102,18 @@ protected:
         tree[id].right_node = -1;
 
         tree[id].color = Color::Black;
-        tree[id].is_fictitious = true;
+        tree[id].is_fict = true;
 
         return id;
     }
 
+    void deleteNode(int x) {
+        free_poses.push_back(x);
+    }
+
     int findPosition(const TKey& key) const {
         int current_pos = root;
-        while (!tree[current_pos].is_fictitious && tree[current_pos].data.first != key) {
+        while (!tree[current_pos].is_fict && tree[current_pos].data.first != key) {
             if (tree[current_pos].data.first > key) {
                 current_pos = tree[current_pos].left_node;
             }
@@ -120,7 +124,6 @@ protected:
         return current_pos;
     }
 
-protected:
     void smallLeftRotation(int x) {
         int y = getRightSon(x);
 
@@ -136,17 +139,7 @@ protected:
         tree[y].parent = subtree_root;
         tree[y].left_node = x;
 
-        if (subtree_root != -1) {
-            if (getLeftSon(subtree_root) == x) {
-                tree[subtree_root].left_node = y;
-            }
-            else {
-                tree[subtree_root].right_node = y;
-            }
-        }
-        else {
-            root = y;
-        }
+        changeParentsSon(subtree_root, x, y);
     }
 
     void smallRightRotation(int x) {
@@ -164,17 +157,7 @@ protected:
         tree[y].parent = subtree_root;
         tree[y].right_node = x;
 
-        if (subtree_root != -1) {
-            if (getRightSon(subtree_root) == x) {
-                tree[subtree_root].right_node = y;
-            }
-            else {
-                tree[subtree_root].left_node = y;
-            }
-        }
-        else {
-            root = y;
-        }
+        changeParentsSon(subtree_root, x, y);
     }
 
     void bigLeftRotation(int x) {
@@ -186,8 +169,6 @@ protected:
         smallLeftRotation(getRightSon(x));
         smallRightRotation(x);
     }
-
-protected:
 
     int getLeftSon(int x) const {
         return tree[x].left_node;
@@ -213,6 +194,13 @@ protected:
         else {
             return getLeftSon(g);
         }
+    }
+
+    int getCousin(int x) const {
+        if (tree[getParent(x)].left_node == x) {
+            return tree[getParent(x)].right_node;
+        }
+        return tree[getParent(x)].left_node;
     }
 
     int getColor(int x) const {
@@ -267,7 +255,302 @@ protected:
         }
     }
 
-private:
+    void changeParentsSon(int p, int old_s, int new_s) {
+        if (p == -1) {
+            root = new_s;
+        }
+        else {
+            if (getLeftSon(p) == old_s) {
+                tree[p].left_node = new_s;
+            }
+            else {
+                tree[p].right_node = new_s;
+            }
+        }
+        tree[new_s].parent = p;
+    }
+
+    int getLowestPos(int x) const {
+        int lowest_pos = x;
+        while (!tree[getLeftSon(lowest_pos)].is_fict) {
+            lowest_pos = getLeftSon(lowest_pos);
+        }
+        return lowest_pos;
+    }
+
+    void fixThisTrashAfterErase(int x) {
+        if (x == root) {
+            return;
+        }
+
+        int A = getParent(x);
+        int B = getCousin(x);
+
+        if (getColor(A) == Color::Red) {
+            if (getLeftSon(B) != -1 && getColor(getLeftSon(B)) == Color::Red) {
+                if (getLeftSon(A) == B) {
+                    /*
+                            A
+                           /
+                          B
+                         /
+                        C
+                    */
+
+                    //tree[A].color = Color::Black;
+
+                    //smallRightRotation(B);
+
+                    if (getColor(getRightSon(B)) == Color::Black) {
+                        smallRightRotation(A);
+                    }
+                    else {
+                        tree[B].color = Color::Red;
+                        tree[getLeftSon(B)].color = Color::Black;
+                        tree[getRightSon(B)].color = Color::Black;
+                        smallRightRotation(A);
+                        smallRightRotation(A);
+                    }
+                }
+                else {
+                    /*
+                        A
+                         \
+                          B
+                         /
+                        C
+                    */
+                    tree[A].color = Color::Black;
+
+                    smallRightRotation(B);
+                    smallLeftRotation(A);
+                }
+            }
+            else if (getRightSon(B) != -1 && getColor(getRightSon(B)) == Color::Red) {
+                if (getLeftSon(A) == B) {
+                    /*
+                       A
+                      /
+                     B
+                      \
+                       C
+                    */
+                    tree[A].color = Color::Black;
+
+                    smallLeftRotation(B);
+                    smallRightRotation(A);
+                }
+                else {
+                    /*
+                       A
+                        \
+                         B
+                          \
+                           Ñ
+                    */
+
+                    //tree[A].color = Color::Black;
+
+                    //smallLeftRotation(B);
+                    //smallLeftRotation(A);
+
+                    if (getColor(getLeftSon(B)) == Color::Black) {
+                        smallLeftRotation(A);
+                    }
+                    else {
+                        tree[B].color = Color::Red;
+                        tree[getLeftSon(B)].color = Color::Black;
+                        tree[getRightSon(B)].color = Color::Black;
+                        smallLeftRotation(A);
+                        smallLeftRotation(A);
+                    }
+                }
+            }
+            else {
+                tree[A].color = Color::Black;
+                tree[B].color = Color::Red;
+            }
+        }
+        else if (getColor(A) == Color::Black) {
+            if (getColor(B) == Color::Red) {
+                if (getLeftSon(A) == B) {
+                    int C = getRightSon(B);
+
+                    /*
+                       A
+                      /
+                     B
+                      \
+                       C
+                    */
+
+                    int D = -1;
+                    if (getLeftSon(C) != -1 && getColor(getLeftSon(C)) == Color::Red) {
+                        D = getLeftSon(C);
+                    }
+                    else if (getRightSon(C) != -1 && getColor(getRightSon(C)) == Color::Red) {
+                        D = getRightSon(C);
+                    }
+
+                    if (D != -1) {
+                        tree[D].color = Color::Black;
+
+                        smallLeftRotation(B);
+                        smallRightRotation(A);
+
+                    }
+                    else {
+                        tree[C].color = Color::Red;
+                        tree[B].color = Color::Black;
+
+                        smallRightRotation(A);
+                    }
+
+                }
+                else {
+                    int C = getLeftSon(B);
+
+                    /*
+                        A
+                         \
+                          B
+                         /
+                        C
+                    */
+
+                    int D = -1;
+                    if (getLeftSon(C) != -1 && getColor(getLeftSon(C)) == Color::Red) {
+                        D = getLeftSon(C);
+                    }
+                    else if (getRightSon(C) != -1 && getColor(getRightSon(C)) == Color::Red) {
+                        D = getRightSon(C);
+                    }
+
+                    if (D != -1) {
+                        tree[D].color = Color::Black;
+
+                        smallRightRotation(B);
+                        smallLeftRotation(A);
+
+                    }
+                    else {
+                        tree[C].color = Color::Red;
+                        tree[B].color = Color::Black;
+
+                        smallLeftRotation(A);
+                    }
+                }
+            }
+            else if (getColor(B) == Color::Black){
+                if (getLeftSon(B) != -1 && getColor(getLeftSon(B)) == Color::Red) {
+                    int C = getLeftSon(B);
+                    if (getLeftSon(A) == B) {
+                        /*
+                                A
+                               /
+                              B
+                             /
+                            C
+                        */
+
+                        tree[C].color = Color::Black;
+
+                        //smallRightRotation(B);
+                        smallRightRotation(A);
+                    }
+                    else {
+                        /*
+                            A
+                             \
+                              B
+                             /
+                            C
+                        */
+                        tree[C].color = Color::Black;
+
+                        smallRightRotation(B);
+                        smallLeftRotation(A);
+                    }
+                }
+                else if (getRightSon(B) != -1 && getColor(getRightSon(B)) == Color::Red) {
+                    int C = getRightSon(B);
+                    if (getLeftSon(A) == B) {
+                        /*
+                           A
+                          /
+                         B
+                          \
+                           C
+                        */
+                        tree[C].color = Color::Black;
+
+                        smallLeftRotation(B);
+                        smallRightRotation(A);
+                    }
+                    else {
+                        /*
+                           A
+                            \
+                             B
+                              \
+                               Ñ
+                        */
+
+                        tree[C].color = Color::Black;
+
+                        //smallLeftRotation(B);
+                        smallLeftRotation(A);
+                    }
+                }
+                else {
+                    tree[B].color = Color::Red;
+                    fixThisTrashAfterErase(A);
+                }
+            }
+        }
+    }
+
+    void eraseNode(int x) {
+        if (!tree[getLeftSon(x)].is_fict && !tree[getRightSon(x)].is_fict) {
+            int min_right = getLowestPos(getRightSon(x));
+            std::swap(tree[x].data, tree[min_right].data);
+            eraseNode(min_right);
+        }
+        else if (tree[getLeftSon(x)].is_fict && !tree[getRightSon(x)].is_fict) {
+            changeParentsSon(getParent(x), x, getRightSon(x));
+            tree[getRightSon(x)].color = Color::Black;
+
+            deleteNode(getLeftSon(x));
+            deleteNode(x);
+        }
+        else if (!tree[getLeftSon(x)].is_fict && tree[getRightSon(x)].is_fict) {
+            changeParentsSon(getParent(x), x, getLeftSon(x));
+            tree[getLeftSon(x)].color = Color::Black;
+
+            deleteNode(getRightSon(x));
+            deleteNode(x);
+        }
+        else if (tree[getLeftSon(x)].is_fict && tree[getRightSon(x)].is_fict) {
+            if (getColor(x) == Color::Red) {
+                changeParentsSon(getParent(x), x, getLeftSon(x));
+
+                deleteNode(getRightSon(x));
+                deleteNode(x);
+            }
+            else {
+
+                int subtree_root = getParent(x);
+                int bad_subtree = getLeftSon(x);
+
+                changeParentsSon(subtree_root, x, bad_subtree);
+
+                deleteNode(getRightSon(x));
+                deleteNode(x);
+
+                fixThisTrashAfterErase(bad_subtree);
+            }
+        }
+    }
 
     int getBlackHeight(bool& flag, int x) {
         if (x == -1) {
@@ -306,7 +589,10 @@ private:
     }
 
     bool isSearchTree(int x) {
-        if (!tree[getLeftSon(x)].is_fictitious) {
+        if (tree[x].is_fict) {
+            return true;
+        }
+        if (!tree[getLeftSon(x)].is_fict) {
             if (tree[x].data.first <= tree[getLeftSon(x)].data.first) {
                 return false;
             }
@@ -314,7 +600,7 @@ private:
                 return false;
             }
         }
-        if (!tree[getRightSon(x)].is_fictitious) {
+        if (!tree[getRightSon(x)].is_fict) {
             if (tree[x].data.first >= tree[getRightSon(x)].data.first) {
                 return false;
             }
@@ -329,11 +615,11 @@ private:
         if (x == -1) {
             return 0;
         }
-        return getCountOfCorrectNode(getLeftSon(x)) + getCountOfCorrectNode(getRightSon(x)) + (!tree[x].is_fictitious);
+        return getCountOfCorrectNode(getLeftSon(x)) + getCountOfCorrectNode(getRightSon(x)) + (!tree[x].is_fict);
     }
 
     void lowerBound(const TKey& key, int x, int &best_pos) {
-        if (tree[x].is_fictitious) {
+        if (tree[x].is_fict) {
             return;
         }
         if (tree[x].data.first >= key) {
@@ -346,7 +632,7 @@ private:
     }
 
     void upperBound(const TKey& key, int x, int &best_pos) {
-        if (tree[x].is_fictitious) {
+        if (tree[x].is_fict) {
             return;
         }
         if (tree[x].data.first > key) {
@@ -377,10 +663,7 @@ public:
     }
 
     Iterator begin() const {
-        int lowest_pos = root;
-        while (!tree[getLeftSon(lowest_pos)].is_fictitious) {
-            lowest_pos = getLeftSon(lowest_pos);
-        }
+        int lowest_pos = getLowestPos(root);
         return makeIterator(lowest_pos);
     }
 
@@ -402,14 +685,14 @@ public:
 
     Iterator insert(const TKey& key, const TValue& value) {
         int pos = findPosition(key);
-        if (tree[pos].is_fictitious) {
+        if (tree[pos].is_fict) {
             ++sz;
 
             tree[pos].data.first = key;
             tree[pos].data.second = value;
 
             tree[pos].color = Color::Red;
-            tree[pos].is_fictitious = false;
+            tree[pos].is_fict = false;
 
             tree[pos].left_node = createNode(pos);
             tree[pos].right_node = createNode(pos);
@@ -420,16 +703,23 @@ public:
     }
 
     Iterator erase(const TKey& key) {
-        // code
+        return erase(find(key));
     }
 
     Iterator erase(Iterator it) {
-        // code
+        if (it == end()) {
+            throw std::out_of_range("No such key in the tree");
+        }
+        --sz;
+        auto result = it;
+        ++result;
+        eraseNode(it.tree_position);
+        return result;
     }
 
     Iterator find(const TKey& key) const {
         int pos = findPosition(key);
-        if (tree[pos].is_fictitious) {
+        if (tree[pos].is_fict) {
             return end();
         }
         return makeIterator(pos);

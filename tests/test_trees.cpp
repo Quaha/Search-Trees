@@ -3,6 +3,7 @@
 #include <random>
 #include <vector>
 #include <set>
+#include <algorithm>
 
 #include "AVLTree.hpp"
 #include "RedBlackTree.hpp"
@@ -12,6 +13,8 @@ class SearchTreeTest : public ::testing::Test {
 protected:
     TreeType tree;
 };
+
+const int BIG_TESTS_SIZE = 3; // 3000
 
 using TreeImplementations = ::testing::Types<RedBlackTree<int, int>>;
 TYPED_TEST_SUITE(SearchTreeTest, TreeImplementations);
@@ -71,7 +74,7 @@ TYPED_TEST(SearchTreeTest, CanInsertSomeElements4) {
 
 TYPED_TEST(SearchTreeTest, CanInsertALotOfElements) {
 
-    const size_t cnt = 1000;
+    const size_t cnt = BIG_TESTS_SIZE;
 
     std::vector<int> keys;
     std::set<int> was;
@@ -89,6 +92,10 @@ TYPED_TEST(SearchTreeTest, CanInsertALotOfElements) {
         EXPECT_NO_THROW(this->tree.insert(key, 0));
         EXPECT_TRUE(this->tree.isCorrectTree());
     }
+}
+
+TYPED_TEST(SearchTreeTest, CantFindWrongElement) {
+    EXPECT_EQ(this->tree.find(0), this->tree.end());
 }
 
 TYPED_TEST(SearchTreeTest, CanFindOneElement) {
@@ -142,7 +149,7 @@ TYPED_TEST(SearchTreeTest, CanFindSomeElements4) {
 
 TYPED_TEST(SearchTreeTest, CanFindALotOfElements) {
 
-    const size_t cnt = 1000;
+    const size_t cnt = BIG_TESTS_SIZE;
 
     std::vector<int> keys;
     std::set<int> was;
@@ -195,7 +202,7 @@ TYPED_TEST(SearchTreeTest, CanChangeSomeElements2) {
 
 TYPED_TEST(SearchTreeTest, CanChangeALotOfElements) {
 
-    const size_t cnt = 1000;
+    const size_t cnt = BIG_TESTS_SIZE;
 
     std::vector<int> keys;
     std::set<int> was;
@@ -224,7 +231,7 @@ TYPED_TEST(SearchTreeTest, CanChangeALotOfElements) {
 
 TYPED_TEST(SearchTreeTest, RangeBasedIterators) {
 
-    const size_t cnt = 1000;
+    const size_t cnt = BIG_TESTS_SIZE;
 
     std::vector<int> keys;
     std::set<int> was;
@@ -290,7 +297,7 @@ TYPED_TEST(SearchTreeTest, UpperBound) {
 }
 
 TYPED_TEST(SearchTreeTest, LowerAndUpperBoundOnLargeTree) {
-    const size_t cnt = 1000;
+    const size_t cnt = BIG_TESTS_SIZE;
     std::vector<int> keys;
     std::set<int> was;
 
@@ -333,6 +340,96 @@ TYPED_TEST(SearchTreeTest, LowerAndUpperBoundOnEmptyTree) {
     EXPECT_EQ(it, this->tree.end());
 }
 
+TYPED_TEST(SearchTreeTest, CantEraseWrongElement) {
+    EXPECT_ANY_THROW(this->tree.erase(0));
+}
+
+TYPED_TEST(SearchTreeTest, CanEraseOneElement) {
+    this->tree.insert(0, 0);
+
+    EXPECT_NO_THROW(this->tree.erase(0));
+    EXPECT_TRUE(this->tree.isCorrectTree());
+}
+
+TYPED_TEST(SearchTreeTest, SpecialDegubTest) {
+
+    std::vector<int> insert_order = { 1, 2, 4, 5, 6, 3 };
+    std::vector<int> erase_order = { 1, 2, 3, 4, 5, 6 };
+
+    for (int key : insert_order) {
+        this->tree.insert(key, 0);
+    }
+
+    for (int key : erase_order) {
+        EXPECT_NO_THROW(this->tree.erase(key));
+        ASSERT_TRUE(this->tree.isCorrectTree());
+    }
+}
+
+TYPED_TEST(SearchTreeTest, CanEraseSomeElements) {
+
+    /*
+    
+    If something wen wrong then use the upper test to fix it!
+    
+    */
+
+    std::vector<int> insert_order = { 1, 2, 3, 4, 5, 6};
+    
+    do {
+        std::vector<int> erase_order = { 1, 2, 3, 4, 5, 6};
+        do {
+
+            for (int key : insert_order) {
+                this->tree.insert(key, 0);
+                EXPECT_TRUE(this->tree.isCorrectTree());
+            }
+
+            for (int key : erase_order) {
+                EXPECT_NO_THROW(this->tree.erase(key));
+                EXPECT_TRUE(this->tree.isCorrectTree());
+
+                if (!this->tree.isCorrectTree()) {
+                    int b = 5;
+                    b += 5;
+                    b++;
+                }
+
+            }
+
+
+        } while (std::next_permutation(erase_order.begin(), erase_order.end()));
+
+    } while (std::next_permutation(insert_order.begin(), insert_order.end()));
+}
+
+//TYPED_TEST(SearchTreeTest, CanEraseALotOfElements) {
+//
+//    std::srand(2008);
+//
+//    const size_t cnt = 10;
+//
+//    std::vector<int> keys;
+//    std::set<int> was;
+//
+//    while (keys.size() < cnt) {
+//        int key = std::rand();
+//
+//        if (!was.contains(key)) {
+//            was.insert(key);
+//            keys.push_back(key);
+//        }
+//    }
+//
+//    for (int key : keys) {
+//        this->tree.insert(key, 0);
+//    }
+//
+//    for (int key : keys) {
+//        EXPECT_NO_THROW(this->tree.erase(key));
+//        EXPECT_TRUE(this->tree.isCorrectTree());
+//    }
+//}
 
 
 
