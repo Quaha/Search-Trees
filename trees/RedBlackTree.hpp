@@ -722,6 +722,6 @@ public:
 
         free_poses.clear();
 
-        root = createNode();
+        root = createNode(root);
     }
 };

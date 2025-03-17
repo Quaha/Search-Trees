@@ -446,7 +446,16 @@ TYPED_TEST(SearchTreeTest, CanEraseALotOfElements) {
     }
 }
 
+TYPED_TEST(SearchTreeTest, CanClearTree) {
 
+    for (int i = 0; i < 100; i++) {
+        this->tree.insert(i, i);
+    }
+
+    EXPECT_NO_THROW(this->tree.clear());
+    EXPECT_TRUE(this->tree.empty());
+
+}
 
 
 
