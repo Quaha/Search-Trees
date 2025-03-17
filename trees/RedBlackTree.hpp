@@ -56,13 +56,26 @@ public:
             return &container->tree[tree_position].data;
         }
 
-        Iterator operator++() {
-            const TKey& key = container->tree[tree_position].data.first;
-            auto result_it = container->upperBound(key);
+        Iterator& operator++() {
+            int pos = tree_position;
 
-            this->tree_position = result_it.tree_position;
+            int right_pos = container->tree[pos].right_node;
 
-            return result_it;
+            if (!container->tree[right_pos].is_fictitious) {
+                pos = container->getLowestPos(right_pos);
+            }
+            else {
+                int prev_pos = container->tree[pos].parent;
+                while (prev_pos != -1 && container->tree[prev_pos].right_node == pos) {
+                    pos = prev_pos;
+                    prev_pos = container->tree[pos].parent;
+                }
+                pos = prev_pos;
+            }
+
+            tree_position = pos;
+
+            return *this;
         }
 
         bool operator==(const Iterator& other) const {
@@ -490,72 +503,15 @@ protected:
         }
         else if (getColor(A) == Color::Black) {
             if (getColor(B) == Color::Red) {
+                setColor(A, Color::Red);
+                setColor(B, Color::Black);
                 if (getLeftSon(A) == B) {
-                    int C = getRightSon(B);
-
-                    /*
-                       A
-                      /
-                     B
-                      \
-                       C
-                    */
-
-                    if (getLeftSon(C) != -1 && getColor(getLeftSon(C)) == Color::Red) {
-                        int D = getLeftSon(C);
-
-                        setColor(D, Color::Black);
-
-                        smallLeftRotation(B);
-                        smallRightRotation(A);
-                    }
-                    else if (getRightSon(C) != -1 && getColor(getRightSon(C)) == Color::Red) {
-                        int D = getRightSon(C);
-
-                        smallLeftRotation(B);
-                        smallRightRotation(A);
-                        smallRightRotation(B);
-                    }
-                    else {
-                        setColor(C, Color::Red);
-                        setColor(B, Color::Black);
-
-                        smallRightRotation(A);
-                    }
+                    smallRightRotation(A);
                 }
                 else {
-                    int C = getLeftSon(B);
-
-                    /*
-                        A
-                         \
-                          B
-                         /
-                        C
-                    */
-
-                    if (getRightSon(C) != -1 && getColor(getRightSon(C)) == Color::Red) {
-                        int D = getRightSon(C);
-
-                        setColor(D, Color::Black);
-
-                        smallRightRotation(B);
-                        smallLeftRotation(A);
-                    }
-                    else if (getLeftSon(C) != -1 && getColor(getLeftSon(C)) == Color::Red) {
-                        int D = getLeftSon(C);
-
-                        smallRightRotation(B);
-                        smallLeftRotation(A);
-                        smallLeftRotation(B);
-                    }
-                    else {
-                        setColor(C, Color::Red);
-                        setColor(B, Color::Black);
-
-                        smallLeftRotation(A);
-                    }
+                    smallLeftRotation(A);
                 }
+                fixTreeAfterErase(x);
             }
             else if (getColor(B) == Color::Black) {
                 if (getLeftSon(B) != -1 && getColor(getLeftSon(B)) == Color::Red) {
@@ -669,6 +625,9 @@ public:
     }
 
     Iterator begin() const {
+        if (empty()) {
+            return end();
+        }
         int lowest_pos = getLowestPos(root);
         return makeIterator(lowest_pos);
     }

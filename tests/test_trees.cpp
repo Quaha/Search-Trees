@@ -237,6 +237,10 @@ TYPED_TEST(SearchTreeTest, CanChangeALotOfElements) {
     }
 }
 
+TYPED_TEST(SearchTreeTest, IsCorrectBeginIteratorFromEmptyTree) {
+    EXPECT_EQ(this->tree.begin(), this->tree.end());
+}
+
 TYPED_TEST(SearchTreeTest, RangeBasedIterators) {
 
     const size_t cnt = BIG_TESTS_SIZE;
@@ -411,33 +415,36 @@ TYPED_TEST(SearchTreeTest, CanEraseSomeElements) {
     } while (std::next_permutation(insert_order.begin(), insert_order.end()));
 }
 
-//TYPED_TEST(SearchTreeTest, CanEraseALotOfElements) {
-//
-//    std::srand(2008);
-//
-//    const size_t cnt = 10;
-//
-//    std::vector<int> keys;
-//    std::set<int> was;
-//
-//    while (keys.size() < cnt) {
-//        int key = std::rand();
-//
-//        if (!was.contains(key)) {
-//            was.insert(key);
-//            keys.push_back(key);
-//        }
-//    }
-//
-//    for (int key : keys) {
-//        this->tree.insert(key, 0);
-//    }
-//
-//    for (int key : keys) {
-//        EXPECT_NO_THROW(this->tree.erase(key));
-//        EXPECT_TRUE(this->tree.isTreeCorrect());
-//    }
-//}
+TYPED_TEST(SearchTreeTest, CanEraseALotOfElements) {
+
+    for (int seed = 0; seed <= 30; seed++) {
+
+        std::srand(seed);
+
+        const size_t cnt = BIG_TESTS_SIZE / 10;
+
+        std::vector<int> keys;
+        std::set<int> was;
+
+        while (keys.size() < cnt) {
+            int key = std::rand();
+
+            if (!was.contains(key)) {
+                was.insert(key);
+                keys.push_back(key);
+            }
+        }
+
+        for (int key : keys) {
+            this->tree.insert(key, 0);
+        }
+
+        for (int key : keys) {
+            EXPECT_NO_THROW(this->tree.erase(key));
+            EXPECT_TRUE(this->tree.isTreeCorrect());
+        }
+    }
+}
 
 
 
