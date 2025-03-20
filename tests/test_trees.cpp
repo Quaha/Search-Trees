@@ -400,13 +400,6 @@ TYPED_TEST(SearchTreeTest, CanEraseSomeElements) {
             for (int key : erase_order) {
                 EXPECT_NO_THROW(this->tree.erase(key));
                 EXPECT_TRUE(this->tree.isTreeCorrect());
-
-                if (!this->tree.isTreeCorrect()) {
-                    int b = 5;
-                    b += 5;
-                    b++;
-                }
-
             }
 
 

@@ -5,6 +5,8 @@ template <typename TKey, typename TValue>
 class RedBlackTree {
 protected:
 
+    using node_ptr = int;
+
     enum Color {
         Red,
         Black
@@ -12,8 +14,8 @@ protected:
 
     struct Node {
 
-        int parent;
-        int left_node, right_node;
+        node_ptr parent;
+        node_ptr left_node, right_node;
 
         Color color;
 
@@ -27,63 +29,63 @@ public:
     class Iterator {
     protected:
 
-        int tree_position = 0;
+        node_ptr ptr = 0;
 
         RedBlackTree<TKey, TValue>* container;
 
-        Iterator(int start_position, RedBlackTree<TKey, TValue>* container) :
-            tree_position(start_position),
+        Iterator(node_ptr ptr, RedBlackTree<TKey, TValue>* container) :
+            ptr(ptr),
             container(container)
         {}
 
     public:
 
         std::pair<const TKey&, TValue&> operator*() {
-            if (tree_position == -1) {
+            if (ptr == -1) {
                 throw std::out_of_range("It is forbidden to dereference .end() iterator.");
             }
-            return { container->tree[tree_position].data.first, container->tree[tree_position].data.second };
+            return { container->tree[ptr].data.first, container->tree[ptr].data.second };
         }
 
         const std::pair<const TKey&, const TValue&> operator*() const {
-            if (tree_position == -1) {
+            if (ptr == -1) {
                 throw std::out_of_range("It is forbidden to dereference .end() iterator.");
             }
-            return { container->tree[tree_position].data.first, container->tree[tree_position].data.second };
+            return { container->tree[ptr].data.first, container->tree[ptr].data.second };
         }
 
         std::pair<TKey, TValue>* operator->() const {
-            return &container->tree[tree_position].data;
+            return &container->tree[ptr].data;
         }
 
         Iterator& operator++() {
-            int pos = tree_position;
+            node_ptr curr_ptr = ptr;
 
-            int right_pos = container->tree[pos].right_node;
+            node_ptr right_pos = container->tree[curr_ptr].right_node;
 
             if (!container->tree[right_pos].is_fictitious) {
-                pos = container->getLowestPos(right_pos);
+                curr_ptr = container->getLowestPos(right_pos);
             }
             else {
-                int prev_pos = container->tree[pos].parent;
-                while (prev_pos != -1 && container->tree[prev_pos].right_node == pos) {
-                    pos = prev_pos;
-                    prev_pos = container->tree[pos].parent;
+                node_ptr prev_pos = container->tree[curr_ptr].parent;
+                while (prev_pos != -1 && container->tree[prev_pos].right_node == curr_ptr) {
+                    curr_ptr = prev_pos;
+                    prev_pos = container->tree[curr_ptr].parent;
                 }
-                pos = prev_pos;
+                curr_ptr = prev_pos;
             }
 
-            tree_position = pos;
+            ptr = curr_ptr;
 
             return *this;
         }
 
         bool operator==(const Iterator& other) const {
-            return this->tree_position == other.tree_position;
+            return this->ptr == other.ptr;
         }
 
         bool operator!=(const Iterator& other) const {
-            return this->tree_position != other.tree_position;
+            return this->ptr != other.ptr;
         }
 
         friend class RedBlackTree;
@@ -430,8 +432,6 @@ protected:
                             A
                            /
                           B
-                         /
-                        C
                     */
 
                     if (getColor(getRightSon(B)) == Color::Black) {
@@ -451,8 +451,6 @@ protected:
                         A
                          \
                           B
-                         /
-                        C
                     */
                     setColor(A, Color::Black);
 
@@ -466,8 +464,6 @@ protected:
                        A
                       /
                      B
-                      \
-                       C
                     */
                     setColor(A, Color::Black);
 
@@ -479,8 +475,6 @@ protected:
                        A
                         \
                          B
-                          \
-                           Ñ
                     */
 
                     if (getColor(getLeftSon(B)) == Color::Black) {
@@ -564,7 +558,7 @@ protected:
                             \
                              B
                               \
-                               Ñ
+                               C
                         */
 
                         setColor(C, Color::Black);
@@ -678,7 +672,7 @@ public:
         --sz;
         auto result = it;
         ++result;
-        erasePosition(it.tree_position);
+        erasePosition(it.ptr);
         return result;
     }
 
