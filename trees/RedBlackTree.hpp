@@ -1,4 +1,4 @@
-#include <iostream>
+#include <utility>
 #include <vector>
 
 template <typename TKey, typename TValue>
@@ -6,6 +6,7 @@ class RedBlackTree {
 protected:
 
     using node_ptr = int;
+    const static node_ptr NULL_PTR = -1;
 
     enum Color {
         Red,
@@ -31,51 +32,48 @@ public:
 
         node_ptr ptr = 0;
 
-        RedBlackTree<TKey, TValue>* container;
+        RedBlackTree<TKey, TValue>* container_ptr;
 
-        Iterator(node_ptr ptr, RedBlackTree<TKey, TValue>* container) :
+        Iterator(node_ptr ptr, RedBlackTree<TKey, TValue>* container_ptr) :
             ptr(ptr),
-            container(container)
+            container_ptr(container_ptr)
         {}
 
     public:
 
         std::pair<const TKey&, TValue&> operator*() {
-            if (ptr == -1) {
+            if (ptr == NULL_PTR) {
                 throw std::out_of_range("It is forbidden to dereference .end() iterator.");
             }
-            return { container->tree[ptr].data.first, container->tree[ptr].data.second };
+            return { container_ptr->tree[ptr].data.first, container_ptr->tree[ptr].data.second };
         }
 
         const std::pair<const TKey&, const TValue&> operator*() const {
-            if (ptr == -1) {
+            if (ptr == NULL_PTR) {
                 throw std::out_of_range("It is forbidden to dereference .end() iterator.");
             }
-            return { container->tree[ptr].data.first, container->tree[ptr].data.second };
+            return { container_ptr->tree[ptr].data.first, container_ptr->tree[ptr].data.second };
         }
 
         std::pair<TKey, TValue>* operator->() const {
-            return &container->tree[ptr].data;
+            return &container_ptr->tree[ptr].data;
         }
 
         Iterator& operator++() {
-            node_ptr curr_ptr = ptr;
+            node_ptr curr_node_ptr = ptr;
+            node_ptr right_son_ptr = container_ptr->tree[curr_node_ptr].right_node;
 
-            node_ptr right_pos = container->tree[curr_ptr].right_node;
-
-            if (!container->tree[right_pos].is_fictitious) {
-                curr_ptr = container->getLowestPos(right_pos);
-            }
-            else {
-                node_ptr prev_pos = container->tree[curr_ptr].parent;
-                while (prev_pos != -1 && container->tree[prev_pos].right_node == curr_ptr) {
-                    curr_ptr = prev_pos;
-                    prev_pos = container->tree[curr_ptr].parent;
-                }
-                curr_ptr = prev_pos;
+            if (!container_ptr->tree[right_son_ptr].is_fictitious) {
+                ptr = container_ptr->getLowestPos(right_son_ptr);
+                return *this;
             }
 
-            ptr = curr_ptr;
+            node_ptr prev_node_ptr = container_ptr->tree[curr_node_ptr].parent;
+            while (prev_node_ptr != NULL_PTR && container_ptr->tree[prev_node_ptr].right_node == curr_node_ptr) {
+                curr_node_ptr = prev_node_ptr;
+                prev_node_ptr = container_ptr->tree[curr_node_ptr].parent;
+            }
+            ptr = prev_node_ptr;
 
             return *this;
         }
@@ -94,47 +92,47 @@ public:
 protected:
 
     std::vector<Node> tree;
-    size_t sz = 0;
+    size_t count_of_elements = 0;
 
-    int root;
+    node_ptr root;
 
-    std::vector<int> free_poses;
+    std::vector<node_ptr> free_poses;
 
 protected:
-    Iterator makeIterator(int position) const {
+    Iterator makeIterator(node_ptr position) const {
         return Iterator(position, const_cast<RedBlackTree<TKey, TValue>*>(this));
     }
 
-    int createNode(int parent) {
+    node_ptr createNode(node_ptr parent) {
         if (free_poses.empty()) {
-            free_poses.push_back((int)tree.size());
+            free_poses.push_back(static_cast<node_ptr>(tree.size()));
             tree.push_back(Node());
         }
-        int id = free_poses.back();
+        node_ptr ptr = free_poses.back();
         free_poses.pop_back();
 
-        tree[id].parent = parent;
-        tree[id].left_node = -1;
-        tree[id].right_node = -1;
+        tree[ptr].parent = parent;
+        tree[ptr].left_node = NULL_PTR;
+        tree[ptr].right_node = NULL_PTR;
 
-        tree[id].color = Color::Black;
-        tree[id].is_fictitious = true;
+        tree[ptr].color = Color::Black;
+        tree[ptr].is_fictitious = true;
 
-        return id;
+        return ptr;
     }
 
-    void deleteNode(int x) {
-        free_poses.push_back(x);
+    void deleteNode(node_ptr ptr) {
+        free_poses.push_back(ptr);
     }
 
 protected:
-    void smallLeftRotation(int x) {
-        int y = getRightSon(x);
+    void smallLeftRotation(node_ptr x) {
+        node_ptr y = getRightSon(x);
 
-        int subtree_root = getParent(x);
+        node_ptr subtree_root = getParent(x);
 
         tree[x].right_node = tree[y].left_node;
-        if (getRightSon(x) != -1) {
+        if (getRightSon(x) != NULL_PTR) {
             tree[getRightSon(x)].parent = x;
         }
 
@@ -146,13 +144,13 @@ protected:
         changeParent(subtree_root, x, y);
     }
 
-    void smallRightRotation(int x) {
-        int y = getLeftSon(x);
+    void smallRightRotation(node_ptr x) {
+        node_ptr y = getLeftSon(x);
 
-        int subtree_root = getParent(x);
+        node_ptr subtree_root = getParent(x);
 
         tree[x].left_node = tree[y].right_node;
-        if (getLeftSon(x) != -1) {
+        if (getLeftSon(x) != NULL_PTR) {
             tree[getLeftSon(x)].parent = x;
         }
 
@@ -165,24 +163,24 @@ protected:
     }
 
 protected:
-    int getLeftSon(int x) const {
+    node_ptr getLeftSon(node_ptr x) const {
         return tree[x].left_node;
     }
 
-    int getRightSon(int x) const {
+    node_ptr getRightSon(node_ptr x) const {
         return tree[x].right_node;
     }
 
-    int getParent(int x) const {
+    node_ptr getParent(node_ptr x) const {
         return tree[x].parent;
     }
 
-    int getGrandParent(int x) const {
+    node_ptr getGrandParent(node_ptr x) const {
         return getParent(getParent(x));
     }
 
-    int getUncle(int x) const {
-        int g = getGrandParent(x);
+    node_ptr getUncle(node_ptr x) const {
+        node_ptr g = getGrandParent(x);
         if (getLeftSon(g) == getParent(x)) {
             return getRightSon(g);
         }
@@ -191,27 +189,27 @@ protected:
         }
     }
 
-    int getCousin(int x) const {
+    node_ptr getBrother(node_ptr x) const {
         if (tree[getParent(x)].left_node == x) {
             return tree[getParent(x)].right_node;
         }
         return tree[getParent(x)].left_node;
     }
 
-    const TKey& getKey(int x) const {
+    const TKey& getKey(node_ptr x) const {
         return tree[x].data.first;
     }
 
-    const TValue& getValue(int x) const {
+    const TValue& getValue(node_ptr x) const {
         return tree[x].data.second;
     }
 
-    bool isFictitious(int x) const {
+    bool isFictitious(node_ptr x) const {
         return tree[x].is_fictitious;
     }
 
-    void changeParent(int parent, int old_son, int new_son) {
-        if (parent == -1) {
+    void changeParent(node_ptr parent, node_ptr old_son, node_ptr new_son) {
+        if (parent == NULL_PTR) {
             root = new_son;
         }
         else {
@@ -226,17 +224,17 @@ protected:
     }
 
 protected:
-    int getColor(int x) const {
+    int getColor(node_ptr x) const {
         return tree[x].color;
     }
 
-    void setColor(int x, Color color) {
+    void setColor(node_ptr x, Color color) {
         tree[x].color = color;
     }
 
 private:
-    int getBlackHeight(bool& flag, int x) const {
-        if (x == -1) {
+    int getBlackHeight(bool& flag, node_ptr x) const {
+        if (x == NULL_PTR) {
             return 0;
         }
 
@@ -249,9 +247,9 @@ private:
         return left_bh + (tree[x].color == Color::Black);
     }
 
-    bool isCorrectRedVertices(int x) const {
+    bool isCorrectRedVertices(node_ptr x) const {
 
-        if (getLeftSon(x) != -1) {
+        if (getLeftSon(x) != NULL_PTR) {
             if (getColor(x) == Color::Red && getColor(getLeftSon(x)) == Color::Red) {
                 return false;
             }
@@ -260,7 +258,7 @@ private:
             }
         }
 
-        if (getRightSon(x) != -1) {
+        if (getRightSon(x) != NULL_PTR) {
             if (getColor(x) == Color::Red && getColor(getRightSon(x)) == Color::Red) {
                 return false;
             }
@@ -271,14 +269,14 @@ private:
         return true;
     }
 
-    int getCountOfCorrectNode(int x) const {
-        if (x == -1) {
+    int getCountOfCorrectNode(node_ptr x) const {
+        if (x == NULL_PTR) {
             return 0;
         }
         return getCountOfCorrectNode(getLeftSon(x)) + getCountOfCorrectNode(getRightSon(x)) + (!isFictitious(x));
     }
 
-    bool isSearchTree(int x, int prev_x) const {
+    bool isSearchTree(node_ptr x, node_ptr prev_x) const {
         if (isFictitious(x)) {
             return true;
         }
@@ -306,7 +304,7 @@ private:
 
 protected:
 
-    int getLowestPos(int x) const {
+    node_ptr getLowestPos(node_ptr x) const {
         int lowest_pos = x;
         while (!isFictitious(getLeftSon(lowest_pos))) {
             lowest_pos = getLeftSon(lowest_pos);
@@ -314,22 +312,22 @@ protected:
         return lowest_pos;
     }
 
-    int findPosition(const TKey& key) const {
-        int current_pos = root;
-        while (!isFictitious(current_pos) && getKey(current_pos) != key) {
-            if (getKey(current_pos) > key) {
-                current_pos = tree[current_pos].left_node;
+    node_ptr findPosition(const TKey& key) const {
+        node_ptr current_ptr = root;
+        while (!isFictitious(current_ptr) && getKey(current_ptr) != key) {
+            if (getKey(current_ptr) > key) {
+                current_ptr = tree[current_ptr].left_node;
             }
             else {
-                current_pos = tree[current_pos].right_node;
+                current_ptr = tree[current_ptr].right_node;
             }
         }
-        return current_pos;
+        return current_ptr;
     }
 
-    void erasePosition(int x) {
+    void erasePosition(node_ptr x) {
         if (!isFictitious(getLeftSon(x)) && !isFictitious(getRightSon(x))) {
-            int min_right = getLowestPos(getRightSon(x));
+            node_ptr min_right = getLowestPos(getRightSon(x));
             std::swap(tree[x].data, tree[min_right].data);
             erasePosition(min_right);
         }
@@ -354,10 +352,10 @@ protected:
                 deleteNode(getRightSon(x));
                 deleteNode(x);
             }
-            else {
+            else if (getColor(x) == Color::Black) {
 
-                int subtree_root = getParent(x);
-                int bad_subtree = getLeftSon(x);
+                node_ptr subtree_root = getParent(x);
+                node_ptr bad_subtree = getLeftSon(x);
 
                 changeParent(subtree_root, x, bad_subtree);
 
@@ -369,18 +367,18 @@ protected:
         }
     }
 
-    void fixTreeAfterInsert(int x) {
-        if (getParent(x) == -1) { // => x is root
+    void fixTreeAfterInsert(node_ptr x) {
+        if (getParent(x) == NULL_PTR) { // => x is root
             setColor(x, Color::Black);
             return;
         }
 
-        int y = getParent(x);
+        node_ptr y = getParent(x);
 
         if (getColor(y) == Color::Red) { // x is Red
 
-            int g = getGrandParent(x);
-            int u = getUncle(x);
+            node_ptr g = getGrandParent(x);
+            node_ptr u = getUncle(x);
 
             if (getColor(u) == Color::Red) {
                 setColor(y, Color::Black);
@@ -417,16 +415,16 @@ protected:
         }
     }
 
-    void fixTreeAfterErase(int x) {
+    void fixTreeAfterErase(node_ptr x) {
         if (x == root) {
             return;
         }
 
-        int A = getParent(x);
-        int B = getCousin(x);
+        node_ptr A = getParent(x);
+        node_ptr B = getBrother(x);
 
         if (getColor(A) == Color::Red) {
-            if (getLeftSon(B) != -1 && getColor(getLeftSon(B)) == Color::Red) {
+            if (getLeftSon(B) != NULL_PTR && getColor(getLeftSon(B)) == Color::Red) {
                 if (getLeftSon(A) == B) {
                     /*
                             A
@@ -458,7 +456,7 @@ protected:
                     smallLeftRotation(A);
                 }
             }
-            else if (getRightSon(B) != -1 && getColor(getRightSon(B)) == Color::Red) {
+            else if (getRightSon(B) != NULL_PTR && getColor(getRightSon(B)) == Color::Red) {
                 if (getLeftSon(A) == B) {
                     /*
                        A
@@ -508,8 +506,8 @@ protected:
                 fixTreeAfterErase(x);
             }
             else if (getColor(B) == Color::Black) {
-                if (getLeftSon(B) != -1 && getColor(getLeftSon(B)) == Color::Red) {
-                    int C = getLeftSon(B);
+                if (getLeftSon(B) != NULL_PTR && getColor(getLeftSon(B)) == Color::Red) {
+                    node_ptr C = getLeftSon(B);
                     if (getLeftSon(A) == B) {
                         /*
                                 A
@@ -537,8 +535,8 @@ protected:
                         smallLeftRotation(A);
                     }
                 }
-                else if (getRightSon(B) != -1 && getColor(getRightSon(B)) == Color::Red) {
-                    int C = getRightSon(B);
+                else if (getRightSon(B) != NULL_PTR && getColor(getRightSon(B)) == Color::Red) {
+                    node_ptr C = getRightSon(B);
                     if (getLeftSon(A) == B) {
                         /*
                            A
@@ -574,7 +572,7 @@ protected:
         }
     }
 
-    void lowerBound(const TKey& key, int x, int &best_pos) const {
+    void lowerBound(const TKey& key, node_ptr x, node_ptr& best_pos) const {
         if (isFictitious(x)) {
             return;
         }
@@ -587,7 +585,7 @@ protected:
         }
     }
 
-    void upperBound(const TKey& key, int x, int &best_pos) const {
+    void upperBound(const TKey& key, node_ptr x, node_ptr&best_pos) const {
         if (isFictitious(x)) {
             return;
         }
@@ -615,50 +613,50 @@ public:
     }
 
     RedBlackTree() {
-        root = createNode(-1);
+        root = createNode(NULL_PTR);
     }
 
     Iterator begin() const {
         if (empty()) {
             return end();
         }
-        int lowest_pos = getLowestPos(root);
+        node_ptr lowest_pos = getLowestPos(root);
         return makeIterator(lowest_pos);
     }
 
     Iterator end() const {
-        return makeIterator(-1);
+        return makeIterator(NULL_PTR);
     }
 
     Iterator lowerBound(const TKey& key) {
-        int best_pos = -1;
+        node_ptr best_pos = NULL_PTR;
         lowerBound(key, root, best_pos);
         return makeIterator(best_pos);
     }
 
     Iterator upperBound(const TKey& key) {
-        int best_pos = -1;
+        node_ptr best_pos = NULL_PTR;
         upperBound(key, root, best_pos);
         return makeIterator(best_pos);
     }
 
     Iterator insert(const TKey& key, const TValue& value) {
-        int pos = findPosition(key);
-        if (isFictitious(pos)) {
-            ++sz;
+        node_ptr ptr = findPosition(key);
+        if (isFictitious(ptr)) {
+            ++count_of_elements;
 
-            tree[pos].data.first = key;
-            tree[pos].data.second = value;
+            tree[ptr].data.first = key;
+            tree[ptr].data.second = value;
 
-            tree[pos].color = Color::Red;
-            tree[pos].is_fictitious = false;
+            tree[ptr].color = Color::Red;
+            tree[ptr].is_fictitious = false;
 
-            tree[pos].left_node = createNode(pos);
-            tree[pos].right_node = createNode(pos);
+            tree[ptr].left_node = createNode(ptr);
+            tree[ptr].right_node = createNode(ptr);
 
-            fixTreeAfterInsert(pos);
+            fixTreeAfterInsert(ptr);
         }
-        return makeIterator(pos);
+        return makeIterator(ptr);
     }
 
     Iterator erase(const TKey& key) {
@@ -669,7 +667,7 @@ public:
         if (it == end()) {
             throw std::out_of_range("No such key in the tree");
         }
-        --sz;
+        --count_of_elements;
         auto result = it;
         ++result;
         erasePosition(it.ptr);
@@ -677,11 +675,11 @@ public:
     }
 
     Iterator find(const TKey& key) const {
-        int pos = findPosition(key);
-        if (isFictitious(pos)) {
+        node_ptr ptr = findPosition(key);
+        if (isFictitious(ptr)) {
             return end();
         }
-        return makeIterator(pos);
+        return makeIterator(ptr);
     }
 
     bool isExist(const TKey& key) const {
@@ -703,16 +701,16 @@ public:
     }
 
     size_t size() const {
-        return sz;
+        return count_of_elements;
     }
 
     bool empty() const {
-        return sz == 0;
+        return count_of_elements == 0;
     }
 
     void clear() {
         tree.clear();
-        this->sz = 0;
+        this->count_of_elements = 0;
 
         free_poses.clear();
 
