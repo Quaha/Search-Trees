@@ -1,3 +1,5 @@
+#pragma once
+
 #include <utility>
 #include <vector>
 
@@ -23,6 +25,11 @@ protected:
         std::pair<TKey, TValue> data;
 
         bool is_fictitious;
+
+        //node_ptr operator new(node_ptr parent) {
+
+        //}
+
     };
 
 public:
@@ -230,76 +237,6 @@ protected:
 
     void setColor(node_ptr x, Color color) {
         tree[x].color = color;
-    }
-
-private:
-    int getBlackHeight(bool& flag, node_ptr x) const {
-        if (x == NULL_PTR) {
-            return 0;
-        }
-
-        int left_bh = getBlackHeight(flag, getLeftSon(x));
-        int right_bh = getBlackHeight(flag, getRightSon(x));
-
-        if (left_bh != right_bh) {
-            flag = false;
-        }
-        return left_bh + (tree[x].color == Color::Black);
-    }
-
-    bool isCorrectRedVertices(node_ptr x) const {
-
-        if (getLeftSon(x) != NULL_PTR) {
-            if (getColor(x) == Color::Red && getColor(getLeftSon(x)) == Color::Red) {
-                return false;
-            }
-            if (!isCorrectRedVertices(getLeftSon(x))) {
-                return false;
-            }
-        }
-
-        if (getRightSon(x) != NULL_PTR) {
-            if (getColor(x) == Color::Red && getColor(getRightSon(x)) == Color::Red) {
-                return false;
-            }
-            if (!isCorrectRedVertices(getRightSon(x))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    int getCountOfCorrectNode(node_ptr x) const {
-        if (x == NULL_PTR) {
-            return 0;
-        }
-        return getCountOfCorrectNode(getLeftSon(x)) + getCountOfCorrectNode(getRightSon(x)) + (!isFictitious(x));
-    }
-
-    bool isSearchTree(node_ptr x, node_ptr prev_x) const {
-        if (isFictitious(x)) {
-            return true;
-        }
-        if (x != root && getParent(x) != prev_x) {
-            return false;
-        }
-        if (!isFictitious(getLeftSon(x))) {
-            if (getKey(x) <= getKey(getLeftSon(x))) {
-                return false;
-            }
-            if (!isSearchTree(getLeftSon(x), x)) {
-                return false;
-            }
-        }
-        if (!isFictitious(getRightSon(x))) {
-            if (getKey(x) >= getKey(getRightSon(x))) {
-                return false;
-            }
-            if (!isSearchTree(getRightSon(x), x)) {
-                return false;
-            }
-        }
-        return true;
     }
 
 protected:
@@ -599,18 +536,6 @@ protected:
     }
 
 public:
-    bool isTreeCorrect() {
-        bool is_correct_bh = true;
-        getBlackHeight(is_correct_bh, root);
-
-        bool is_correct_red_vertices = isCorrectRedVertices(root);
-
-        bool is_search_tree = isSearchTree(root, root);
-
-        bool is_correct_size = (size() == getCountOfCorrectNode(root));
-
-        return is_correct_bh && is_correct_red_vertices && is_search_tree && is_correct_size;
-    }
 
     RedBlackTree() {
         root = createNode(NULL_PTR);
