@@ -5,6 +5,7 @@
 #include <set>
 #include <algorithm>
 
+#include "TestableAVLTree.hpp"
 #include "TestableRedBlackTree.hpp"
 
 template <typename TreeType>
@@ -15,7 +16,7 @@ protected:
 
 const int BIG_TESTS_SIZE = 3000;
 
-using TreeImplementations = ::testing::Types<TestableRedBlackTree<int, int>>;
+using TreeImplementations = ::testing::Types<TestableAVLTree<int, int>>;
 TYPED_TEST_SUITE(SearchTreeTest, TreeImplementations);
 
 TYPED_TEST(SearchTreeTest, IsEmptyContainerAfterInitializing) {

@@ -237,7 +237,7 @@ protected:
 protected:
 
     node_ptr getLowestPos(node_ptr x) const {
-        int lowest_pos = x;
+        node_ptr lowest_pos = x;
         while (!isFictitious(getLeftSon(lowest_pos))) {
             lowest_pos = getLeftSon(lowest_pos);
         }
@@ -504,29 +504,29 @@ protected:
         }
     }
 
-    void lowerBound(const TKey& key, node_ptr x, node_ptr& best_pos) const {
+    void lowerBound(const TKey& key, node_ptr x, node_ptr& nearest_pos) const {
         if (isFictitious(x)) {
             return;
         }
         if (getKey(x) >= key) {
-            best_pos = x;
-            lowerBound(key, getLeftSon(x), best_pos);
+            nearest_pos = x;
+            lowerBound(key, getLeftSon(x), nearest_pos);
         }
         else{
-            lowerBound(key, getRightSon(x), best_pos);
+            lowerBound(key, getRightSon(x), nearest_pos);
         }
     }
 
-    void upperBound(const TKey& key, node_ptr x, node_ptr&best_pos) const {
+    void upperBound(const TKey& key, node_ptr x, node_ptr&nearest_pos) const {
         if (isFictitious(x)) {
             return;
         }
         if (getKey(x) > key) {
-            best_pos = x;
-            upperBound(key, getLeftSon(x), best_pos);
+            nearest_pos = x;
+            upperBound(key, getLeftSon(x), nearest_pos);
         }
         else {
-            upperBound(key, getRightSon(x), best_pos);
+            upperBound(key, getRightSon(x), nearest_pos);
         }
     }
 
@@ -549,15 +549,15 @@ public:
     }
 
     Iterator lowerBound(const TKey& key) {
-        node_ptr best_pos = NULL_PTR;
-        lowerBound(key, root, best_pos);
-        return makeIterator(best_pos);
+        node_ptr nearest_pos = NULL_PTR;
+        lowerBound(key, root, nearest_pos);
+        return makeIterator(nearest_pos);
     }
 
     Iterator upperBound(const TKey& key) {
-        node_ptr best_pos = NULL_PTR;
-        upperBound(key, root, best_pos);
-        return makeIterator(best_pos);
+        node_ptr nearest_pos = NULL_PTR;
+        upperBound(key, root, nearest_pos);
+        return makeIterator(nearest_pos);
     }
 
     Iterator insert(const TKey& key, const TValue& value) {
@@ -625,12 +625,12 @@ public:
     }
 
     bool empty() const {
-        return count_of_elements == 0;
+        return count_of_elements == 0U;
     }
 
     void clear() {
         tree.clear();
-        this->count_of_elements = 0;
+        this->count_of_elements = 0U;
 
         free_poses.clear();
 
