@@ -11,22 +11,27 @@ class TestableRedBlackTree : public RedBlackTree<TKey, TValue> {
     using RedBlackTree<TKey, TValue>::NULL_PTR;
 
 protected:
-    int getBlackHeight(bool& is_correct_bh, node_ptr x) const {
+    size_t getBlackHeight(bool& is_correct_bh, node_ptr x) const {
         if (x == NULL_PTR) {
-            return 0;
+            return 0U;
         }
 
-        int left_bh = getBlackHeight(is_correct_bh, this->getLeftSon(x));
-        int right_bh = getBlackHeight(is_correct_bh, this->getRightSon(x));
+        size_t left_bh = getBlackHeight(is_correct_bh, this->getLeftSon(x));
+        size_t right_bh = getBlackHeight(is_correct_bh, this->getRightSon(x));
 
         if (left_bh != right_bh) {
             is_correct_bh = false;
         }
-        return left_bh + (this->getColor(x) == Color::Black);
+
+        size_t result = left_bh;
+        if (this->getColor(x) == Color::Black) {
+            ++result;
+        }
+
+        return result;
     }
 
     bool isCorrectRedVertices(node_ptr x) const {
-
         if (this->getLeftSon(x) != NULL_PTR) {
             if (this->getColor(x) == Color::Red && this->getColor(this->getLeftSon(x)) == Color::Red) {
                 return false;
@@ -44,16 +49,25 @@ protected:
                 return false;
             }
         }
+
         return true;
     }
 
-    int getCountOfCorrectNode(node_ptr x) const {
+    size_t getCountOfCorrectNode(node_ptr x) const {
         if (x == NULL_PTR) {
-            return 0;
+            return 0U;
         }
-        return getCountOfCorrectNode(this->getLeftSon(x)) +
-               getCountOfCorrectNode(this->getRightSon(x)) +
-               (!this->isFictitious(x));
+
+        size_t count = 0;
+
+        count += getCountOfCorrectNode(this->getLeftSon(x));
+        count += getCountOfCorrectNode(this->getRightSon(x));
+
+        if (!this->isFictitious(x)) {
+            ++count;
+        }
+
+        return count;
     }
 
     bool isSearchTree(node_ptr x, node_ptr prev_x) const {
@@ -89,9 +103,7 @@ public:
         getBlackHeight(is_correct_bh, this->root);
 
         bool is_correct_red_vertices = isCorrectRedVertices(this->root);
-
         bool is_search_tree = isSearchTree(this->root, this->root);
-
         bool is_correct_size = (this->size() == getCountOfCorrectNode(this->root));
 
         return is_correct_bh && is_correct_red_vertices && is_search_tree && is_correct_size;

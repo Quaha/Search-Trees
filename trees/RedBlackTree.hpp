@@ -25,11 +25,6 @@ protected:
         std::pair<TKey, TValue> data;
 
         bool is_fictitious;
-
-        //node_ptr operator new(node_ptr parent) {
-
-        //}
-
     };
 
 public:
