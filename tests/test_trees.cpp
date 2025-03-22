@@ -16,7 +16,9 @@ protected:
 
 const int BIG_TESTS_SIZE = 3000;
 
-using TreeImplementations = ::testing::Types<TestableAVLTree<int, int>>;
+using TreeImplementations = ::testing::Types<TestableAVLTree<int, int>,
+                                             TestableRedBlackTree<int, int>>;
+
 TYPED_TEST_SUITE(SearchTreeTest, TreeImplementations);
 
 TYPED_TEST(SearchTreeTest, IsEmptyContainerAfterInitializing) {
@@ -431,6 +433,7 @@ TYPED_TEST(SearchTreeTest, CanEraseALotOfElements) {
 
         for (int key : keys) {
             this->tree.insert(key, 0);
+            EXPECT_TRUE(this->tree.isTreeCorrect());
         }
 
         for (int key : keys) {

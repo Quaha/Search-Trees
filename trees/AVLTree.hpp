@@ -311,6 +311,8 @@ protected:
             node_ptr y = getLeftSon(x);
             node_ptr z = getRightSon(x);
 
+            updateHeight(x);
+
             if (getHeight(y) + 1 < getHeight(z)) {
                 if (getHeight(getRightSon(z)) >= getHeight(getLeftSon(z))) {
                     smallLeftRotation(x);
@@ -321,16 +323,13 @@ protected:
                 x = getParent(x);
             }
             else if (getHeight(y) > getHeight(z) + 1) {
-                if (getHeight(getRightSon(y)) >= getHeight(getLeftSon(y))) {
+                if (getHeight(getRightSon(y)) > getHeight(getLeftSon(y))) {
                     bigRightRotation(x);
                 }
                 else {
                     smallRightRotation(x);
                 }
                 x = getParent(x);
-            }
-            else {
-                updateHeight(x);
             }
         }
     }
@@ -410,8 +409,9 @@ public:
         }
         --count_of_elements;
         auto result = it;
+        ++result;
         erasePosition(it.ptr);
-        return ++result;
+        return result;
     }
 
     Iterator find(const TKey& key) const {
