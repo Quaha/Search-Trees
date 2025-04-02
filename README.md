@@ -8,3 +8,4 @@ Clone this repository and create a `build` folder in its root directory. Launch 
 - C++
 - CMake
 - Google Test
+- Git
